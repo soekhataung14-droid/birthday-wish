@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>For Yu 🤍</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{background:#09060b;color:#fff;font-family:"Noto Sans Myanmar","Myanmar Text",system-ui,sans-serif}
+#app{position:relative;width:100%;height:100%;overflow:hidden}
+.bg{position:fixed;inset:0;background:radial-gradient(circle at 50% 20%,#3b1735 0,#170c18 38%,#070509 100%);z-index:-2}
+.glow{position:fixed;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(255,150,210,.13),transparent 42%);filter:blur(35px);z-index:-1}
+.stage{height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
+.card{width:min(560px,94vw);max-height:88vh;overflow:auto;text-align:center;padding:34px 24px 30px;border:1px solid rgba(255,255,255,.12);border-radius:28px;background:rgba(18,10,20,.72);backdrop-filter:blur(16px);box-shadow:0 20px 80px rgba(0,0,0,.5)}
+.small{letter-spacing:3px;text-transform:uppercase;font-size:11px;opacity:.62}
+h1{font-size:clamp(38px,10vw,64px);line-height:1.05;margin:18px 0 12px;font-weight:700}
+h2{font-size:30px;margin:0 0 18px}.text{font-size:18px;line-height:2.05;color:#f7edf5}
+.photo{display:block;width:min(420px,100%);max-height:58vh;object-fit:contain;margin:0 auto 20px;border-radius:22px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.caption{font-size:19px;line-height:1.9;color:#f8eaf4}
+.btn{border:0;border-radius:999px;padding:14px 25px;margin-top:24px;font-size:16px;font-weight:700;cursor:pointer;background:#fff;color:#261322;box-shadow:0 8px 30px rgba(255,255,255,.15)}
+.btn.ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18)}
+.dots{position:fixed;top:18px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);transition:.3s}.dot.on{width:22px;border-radius:9px;background:#fff}
+.music{position:fixed;right:16px;top:16px;z-index:20;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(20,10,20,.7);color:#fff}
+.fade{animation:fade .65s ease both}@keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.heart{position:fixed;bottom:-30px;animation:float 5s linear forwards;pointer-events:none}@keyframes float{to{transform:translateY(-115vh) rotate(30deg);opacity:0}}
+#player{position:fixed;left:-1000px;top:-1000px;width:1px;height:1px;opacity:.01}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="glow"></div>
+<div class="dots" id="dots"></div>
+<button class="music" id="music" title="Music">♫</button>
+<div id="app"></div>
+<div id="player"></div>
+<script>
+const app=document.getElementById('app'),dots=document.getElementById('dots');
+let sourceDoc=null,photos=[],step=0,playing=false;
+
+async function loadSource(){
+ const html=await fetch('index.html').then(r=>r.text());
+ sourceDoc=new DOMParser().parseFromString(html,'text/html');
+ photos=[...sourceDoc.querySelectorAll('img.photo')].map(x=>x.src);
+ const hero=sourceDoc.querySelector('.hero');
+ const sections=[...sourceDoc.querySelectorAll('main.wrap > section')];
+ const firstText=hero?.querySelector('.subtitle')?.textContent||'ဒီနေ့က ယုအတွက် အထူးနေ့လေးတစ်နေ့ပါ။';
+ const message=sourceDoc.querySelector('.message')?.innerHTML || '';
+ const captions=[...sourceDoc.querySelectorAll('.section .caption')].map(x=>x.textContent.trim()).filter(Boolean);
+ const ask=sourceDoc.querySelector('.ask')?.innerHTML || '';
+ window.story={firstText,message,captions,ask};
+ build();
+}
+
+function build(){
+ const total=2+photos.length+2;
+ dots.innerHTML='';
+ for(let i=0;i<total;i++){const d=document.createElement('span');d.className='dot';dots.appendChild(d)}
+ render();
+}
+
+function card(inner){
+ app.innerHTML='<div class="stage"><div class="card fade">'+inner+'</div></div>';
+ [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===step));
+}
+
+function render(){
+ if(step===0){
+  card('<div class="small">A little birthday letter</div><h1>Happy Birthday,<br>Yu 🤍</h1><div class="caption">'+story.firstText+'</div><button class="btn" onclick="next(true)">စဖွင့်မယ် 🤍</button>');
+  return;
+ }
+ if(step===1){
+  card('<div class="small">For Yu</div><h2>ဒီစာကို ဖြည်းဖြည်းချင်းဖတ်ပေးပါ…</h2><div class="text">တချို့လူတွေက ကိုယ့်နေ့ရက်တွေထဲကို<br>မသိမသာ ဝင်လာတတ်တယ်…</div><button class="btn" onclick="next()">နောက်တစ်ခု →</button>');
+  return;
+ }
+ const photoStart=2;
+ const photoEnd=2+photos.length;
+ if(step>=photoStart && step<photoEnd){
+  const i=step-photoStart;
+  const cap=story.captions[i]||'ယုရဲ့အမှတ်တရလေး…';
+  card('<img class="photo" src="'+photos[i]+'" alt="Yu"><div class="caption">'+cap+'</div><button class="btn" onclick="next()">နောက်တစ်ခု →</button>');
+  return;
+ }
+ if(step===photoEnd){
+  card('<div class="small">A little confession</div><h2>ယုရေ…</h2><div class="text">မသိမသာနဲ့<br>ယုက ကိုယ့်ရဲ့နေ့ရက်တွေထဲမှာ<br>အရေးကြီးဆုံးလူတစ်ယောက် ဖြစ်လာခဲ့တယ်။<br><br>ယုကိုတွေ့ရင် ရင်ခုန်တယ်၊<br>မတွေ့ရင် လွမ်းတယ်၊<br>ဘာမဆိုမြင်ရင် ယုကို သတိရတယ်။</div><button class="btn" onclick="next()">ဆက်ဖတ်မယ် 🤍</button>');
+  return;
+ }
+ card('<div class="small">One last thing</div><h2>ကိုယ် မဖုံးကွယ်တော့ဘူး…</h2><div class="text">ကိုယ် ယုကို ချစ်မိနေပြီ။<br><br>ယု့ကို ချစ်ခွင့်လေး ပေးမလား… 🤍</div><button class="btn" onclick="showAnswer()">အဖြေပြောမယ် 🤍</button>');
+}
+
+function next(startMusic=false){
+ if(startMusic) startSong();
+ step++;
+ if(step>2+photos.length+1) step=2+photos.length+1;
+ render();burst();
+}
+function showAnswer(){
+ const box='<div class="small">Yu…</div><h2>အဖြေကို အလျင်မလိုပါဘူး 🤍</h2><div class="text">ယုအဆင်ပြေတဲ့အချိန်မှာ<br>ကိုယ့်ကို ပြောပေးပါ။</div><button class="btn" onclick="answer(1)">🤍 ကိုယ်လည်း…</button><br><button class="btn ghost" onclick="answer(2)">🌙 အချိန်နည်းနည်းပေးပါ</button><br><button class="btn ghost" onclick="answer(3)">🌿 မိတ်ဆွေအဖြစ်ပဲ</button>';
+ card(box);
+}
+function answer(n){
+ const t=n===1?'🤍 ကျေးဇူးတင်တယ် ယု… ဒီနေ့က ကိုယ့်အတွက် တကယ်မမေ့နိုင်တဲ့ Birthday ဖြစ်သွားပြီ။':n===2?'🌙 ရပါတယ် ယု။ အလျင်မလိုဘူး။ ကိုယ်စောင့်နိုင်ပါတယ်။':'🌿 ရပါတယ် ယု။ ကိုယ့်ကို ရိုးရိုးသားသား ပြောပေးတာကို တန်ဖိုးထားပါတယ်။';
+ card('<h2>'+t+'</h2><div class="caption">Happy Birthday, Yu 🤍</div>');
+}
+function burst(){for(let i=0;i<10;i++){let e=document.createElement('span');e.className='heart';e.textContent=['🤍','✨','🌸','💗'][Math.floor(Math.random()*4)];e.style.left=Math.random()*100+'%';e.style.fontSize=16+Math.random()*18+'px';document.body.appendChild(e);setTimeout(()=>e.remove(),5000)}}
+
+function startSong(){
+ if(playing)return; playing=true;
+ document.getElementById('player').innerHTML='<iframe id="yt" width="1" height="1" src="https://www.youtube.com/embed/syFZfO_wfMQ?autoplay=1&loop=1&playlist=syFZfO_wfMQ&playsinline=1" title="Night Changes" allow="autoplay; encrypted-media"></iframe>';
+ document.getElementById('music').textContent='♫';
+}
+document.getElementById('music').onclick=()=>startSong();
+loadSource().catch(()=>card('<h2>ခဏလေး…</h2><div class="text">Page ကို load မဖြစ်သေးပါဘူး။ ပြန်ဖွင့်ကြည့်ပါ 🤍</div>'));
+</script>
+</body>
+</html>
